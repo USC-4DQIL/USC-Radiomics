@@ -1,0 +1,104 @@
+%% IBSI Texture Analysis
+% main compilation of the texture analysis functions. Can change the number
+% of discrete gray levels, originally set at 6. Included GLDM from USC
+% Radiomics calculations, not delineated in IBSI core function
+% https://ibsi.readthedocs.io/en/latest/03_Image_features.html#grey-level-run-length-based-features
+clc;
+clear;
+%% Image Upload and Discretization
+
+% based on number of levels
+numLevels = 6; % change number of gray levels here
+% winImg = discretizationBins(im2double(imread('D1.gif'))); % change uploaded image here
+% 
+
+% based on a fixed bin width
+% binWidth = 0.2;
+% winImg = discretizationBinWidth(im2double(imread('D1.gif')),binWidth);
+
+
+%% image phantom used in IBSI database
+
+ROIlayer1 = [1 4 4 1 1; 1 4 6 1 1; 4 1 6 4 1; 4 4 6 4 1];
+ROIlayer2 = [1 4 4 1 1; 1 1 6 1 1; NaN 1 3 1 1; 4 4 6 1 1];
+ROIlayer3 = [1 4 4 NaN NaN; 1 1 1 1 1; 1 1 NaN 1 1; 1 1 6 1 1];
+ROIlayer4 = [1 4 4 NaN NaN; 1 1 1 1 1; 1 1 1 1 1; 1 1 6 1 1];
+% % 
+winImg(:,:,1) = ROIlayer1;
+winImg(:,:,2) = ROIlayer2; 
+winImg(:,:,3) = ROIlayer3; 
+winImg(:,:,4) = ROIlayer4; 
+
+%% Calculations
+
+% Aggregating Methods Summary for GLCM and GLRLM
+% Rows 1-6 correspond to:
+% 1 -- 2D, by slice, w/o merging
+% 2 -- 2D, by slice, w/ merging by slice
+% 3 -- 2.5D, by slice, w/ merging by direction
+% 4 -- 2.5D, by slice, w/ full merging
+% 5 -- 3D, as volume, w/o merging
+% 6 -- 3D, as volume, w/ full merging
+featuresGLCM = GLCM(winImg,numLevels); %gray level co-occurance matrix, data in form of struct
+featuresGLRLM = GLRLM(winImg,numLevels); %gray level run length matrix
+
+% Aggregating Methods Summary for GLSZM, GLDZM, NGTDM, NGLDM
+% Rows 1-3 correspond to:
+% 1 -- 2D, by slice, without merging
+% 2 -- 2.5D, by slice, with merging
+% 3 -- 3D: as volume
+
+featuresGLSZM = GLSZM(winImg,numLevels); % gray level size zone matrix
+featuresGLDZM = GLDZM(winImg,numLevels); % gray level distance zone matrix
+featuresNGTDM = NGTDM(winImg,numLevels); % neighborhood grey tone difference matrix
+featuresNGLDM = NGLDM(winImg,numLevels); % neighborhood grey level difference matrix
+
+% USC specific, row 1 corresponds to 2D features and row 2 to 3D features
+featuresGLDM = GLDM(winImg,numLevels); % gray level dependence matrix, USC only
+
+%% Discretization Algorithms
+
+% discretization based on fixed number of bins
+function image = discretizationBins(image,numLevels)
+minimum = min(min(image));
+maximum = max(max(image));
+range = maximum - minimum;
+interval = ceil(range/numLevels);
+image(image >= maximum) = numLevels;
+image(image <= minimum) = 1;
+ 
+for level = 0:1:(numLevels-1)
+     for i = 1:size(image,1)
+         for j = 1:size(image,2)
+             if image(i,j) >= (minimum + level*interval) ...
+                     && image(i,j) < (minimum + (level+1)*interval)
+                 image(i,j) = level+1;
+             end
+         end
+    end
+end
+
+end
+%
+
+
+function image = discretizationBinWidth(image,binWidth)
+minimum = min(min(image));
+maximum = max(max(image));
+range = maximum - minimum;
+numLevels = ceil(range/binWidth);
+image(image >= maximum) = numLevels;
+image(image <= minimum) = 1;
+interval = binWidth;
+% 
+ for level = 0:1:(numLevels-1)
+     for i = 1:size(image,1)
+         for j = 1:size(image,2)
+             if image(i,j) >= (minimum + level*interval) ...
+                     && image(i,j) < (minimum + (level+1)*interval)
+                 image(i,j) = level+1;
+             end
+         end
+     end
+ end
+end
