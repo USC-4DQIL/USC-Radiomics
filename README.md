@@ -6,4 +6,6 @@ Gray Level Co-occurence Matrix (GLCM), Gray Level Run Length Matrix (GLRLM), Gra
 Neighborhood Grey Tone Difference Matrix (NGTDM), and Neighborhood Grey Level Dependence Matrix (NGTDM). Note, the subfolder GLRL was authored by Xunkai Wei
 of the Beijing Aeronautical Technology Research Center and is used in the GLRLM function. 
 
+
+The latest code update was authored by Kate Sweetland on March 15, 2024. 
 All function and feature calculations are based on the following directory: https://ibsi.readthedocs.io/en/latest/03_Image_features.html#. 
